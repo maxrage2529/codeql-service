@@ -1,0 +1,14 @@
+codeql:
+  cli_path: "C:/Users/MAXRAGE/AppData/Local/codeql"
+  default_query_suite: "python-security-and-quality.qls"
+  custom_query_suite: ""  # Optional: path to custom query suite
+
+repositories:
+  - url: "https://github.com/maxrage2529/chatbot"
+    branch: "develop"
+  - url: "https://github.com/maxrage2529/cp-only"
+    branch: "main"
+
+output:
+  results_dir: "./results"
+  log_dir: "./logs"

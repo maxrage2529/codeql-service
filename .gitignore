@@ -169,3 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+.idea/vcs.xml
+.idea/modules.xml
+.idea/misc.xml
+.idea/codeql-service.iml
+.idea/.gitignore
+.gitignore
