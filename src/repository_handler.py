@@ -5,11 +5,13 @@ import shutil
 import stat
 from typing import Optional
 import time
+import subprocess
 
 class RepositoryHandler:
-    def __init__(self, work_dir: str):
+    def __init__(self, work_dir: str, logger: Optional[logging.Logger] = None):
+        """Initialize repository handler with working directory"""
         self.work_dir = work_dir
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger('codeql_automation')
         self._ensure_directory(work_dir)
 
     def _ensure_directory(self, directory: str) -> None:
@@ -53,41 +55,57 @@ class RepositoryHandler:
                 else:
                     time.sleep(1)  # Wait before retry
 
-    def clone_and_checkout(self, repo_url: str, branch: str) -> Optional[str]:
+    def clone_repository(self, repo_url: str, branch: str) -> bool:
         """Clone a repository and checkout specified branch"""
         try:
-            repo_name = repo_url.split('/')[-1].replace('.git', '')
-            repo_path = os.path.join(self.work_dir, repo_name)
+            # Remove existing directory if it exists
+            if os.path.exists(self.work_dir):
+                self.logger.info(f"Removing existing directory: {self.work_dir}")
+                self._safe_cleanup(self.work_dir)
 
-            self.logger.info(f"Starting repository processing for {repo_name}")
-            
-            # Clean up existing repository if it exists
-            if os.path.exists(repo_path):
-                self.logger.info(f"Removing existing repository at {repo_path}")
-                self._safe_cleanup(repo_path)
+            # Create parent directory if needed
+            os.makedirs(os.path.dirname(self.work_dir), exist_ok=True)
 
-            self.logger.info(f"Cloning repository {repo_name} from {repo_url}")
-            repo = git.Repo.clone_from(repo_url, repo_path)
-            
-            self.logger.info(f"Checking out branch {branch}")
-            repo.git.checkout(branch)
-            
-            self.logger.info(f"Successfully cloned and checked out {repo_name} at {repo_path}")
-            return repo_path
+            # Clone repository
+            self.logger.info(f"Cloning {repo_url} branch {branch} to {self.work_dir}")
+            cmd = [
+                "git",
+                "clone",
+                "--branch",
+                branch,
+                "--single-branch",
+                "--depth",
+                "1",
+                repo_url,
+                self.work_dir
+            ]
 
-        except git.GitCommandError as e:
-            self.logger.error(f"Git operation failed for {repo_url}: {str(e)}")
-            if "Remote branch {branch} not found" in str(e):
-                self.logger.error(f"Branch {branch} does not exist in repository")
-            return None
+            process = subprocess.run(
+                cmd,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+
+            self.logger.info("Repository cloned successfully")
+            return True
+
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Failed to clone repository: {str(e)}")
+            self.logger.error(f"Error output: {e.stderr}")
+            return False
         except Exception as e:
-            self.logger.error(f"Unexpected error during repository handling: {str(e)}")
-            self.logger.exception("Full traceback:")
-            return None
+            self.logger.error(f"Unexpected error during cloning: {str(e)}")
+            return False
 
-    def cleanup(self, repo_path: str) -> None:
-        """Clean up repository directory"""
-        try:
-            self._safe_cleanup(repo_path)
-        except Exception as e:
-            self.logger.error(f"Failed to cleanup repository at {repo_path}: {str(e)}") 
+    def cleanup(self) -> None:
+        """Clean up the working directory"""
+        # Commented out cleanup for now
+        # try:
+        #     if os.path.exists(self.work_dir):
+        #         self.logger.info(f"Cleaning up directory: {self.work_dir}")
+        #         self._safe_cleanup(self.work_dir)
+        #         self.logger.info("Cleanup completed successfully")
+        # except Exception as e:
+        #     self.logger.error(f"Error during cleanup: {str(e)}")
+        pass
