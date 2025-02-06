@@ -1,13 +1,34 @@
 codeql:
-  cli_path: "C:/Users/MAXRAGE/AppData/Local/codeql"
-  default_query_suite: "python-security-and-quality.qls"
-  custom_query_suite: ""  # Optional: path to custom query suite
+  cli_path: "C:/Users/MAXRAGE/Downloads/codeql-bundle-win64/codeql/codeql.exe"
+  languages:
+    - python
+    - java
+    - javascript
+  default_query_suites:
+    python: "python-security-and-quality.qls"
+    java: "java-security-and-quality.qls"
+    javascript: "javascript-security-and-quality.qls"
 
 repositories:
   - url: "https://github.com/maxrage2529/chatbot"
     branch: "develop"
-  - url: "https://github.com/maxrage2529/cp-only"
-    branch: "main"
+    languages: ["python"]
+
+    # - url: "https://github.com/maxrage2529/sample-vulnerabilities"
+    #   branch: "python"
+    #   languages: ["python"]
+
+    # - url: "https://github.com/maxrage2529/sample-vulnerabilities"
+    #   branch: "java"
+    #   languages: ["java"]
+
+    # - url: "https://github.com/maxrage2529/sample-vulnerabilities"
+    #   branch: "javascript"
+    #   languages: ["javascript"]
+
+  # - url: "https://github.com/maxrage2529/sample-vulnerabilities"
+  #   branch: "py-js"
+  #   languages: ["python", "javascript"]
 
 output:
   results_dir: "./results"
